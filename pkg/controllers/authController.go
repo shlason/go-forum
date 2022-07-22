@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -21,33 +20,38 @@ func signup(w http.ResponseWriter, r *http.Request) {
 	utils.ParseBody(r, user)
 	if user.Email == "" || user.Name == "" || user.Password == "" {
 		w.WriteHeader(http.StatusBadRequest)
+		formatResponseBody(w, responseBody{Msg: "params not enough", Data: nil})
 		return
 	}
 	err := user.ReadByEmail()
 	if err == nil {
 		w.WriteHeader(http.StatusConflict)
+		formatResponseBody(w, responseBody{Msg: "email already exist", Data: nil})
 		return
 	}
 	if err != sql.ErrNoRows {
 		w.WriteHeader(http.StatusInternalServerError)
+		formatResponseBody(w, responseBody{Msg: fmt.Sprintf("%s", err), Data: nil})
 		return
 	}
 	err = user.ReadByName()
 	if err == nil {
 		w.WriteHeader(http.StatusConflict)
+		formatResponseBody(w, responseBody{Msg: "user name already exist", Data: nil})
 		return
 	}
 	if err != sql.ErrNoRows {
 		w.WriteHeader(http.StatusInternalServerError)
+		formatResponseBody(w, responseBody{Msg: fmt.Sprintf("%s", err), Data: nil})
 		return
 	}
 	err = user.Create()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		formatResponseBody(w, responseBody{Msg: fmt.Sprintf("%s", err), Data: nil})
 		return
 	}
-	res, _ := json.Marshal(user)
-	w.Write(res)
+	formatResponseBody(w, responseBody{Msg: fmt.Sprintf("%s", err), Data: user})
 }
 
 var accountTypes = map[string]string{
@@ -60,7 +64,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	utils.ParseBody(r, user)
 	if (user.Email == "" && user.Name == "") || user.Password == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		formatResponseBody(w, responseBody{msg: "params not enough", data: nil})
+		formatResponseBody(w, responseBody{Msg: "params not enough", Data: nil})
 		return
 	}
 
@@ -85,21 +89,21 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 	if err == sql.ErrNoRows {
 		w.WriteHeader(http.StatusBadRequest)
-		formatResponseBody(w, responseBody{msg: fmt.Sprintf("%s not found", accountType), data: nil})
+		formatResponseBody(w, responseBody{Msg: fmt.Sprintf("%s not found", accountType), Data: nil})
 		return
 	}
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		formatResponseBody(w, responseBody{msg: fmt.Sprintf("%s", err), data: nil})
+		formatResponseBody(w, responseBody{Msg: fmt.Sprintf("%s", err), Data: nil})
 		return
 	}
 	if !utils.CheckPasswordHash(user.Password, rpwd) {
 		w.WriteHeader(http.StatusBadRequest)
-		formatResponseBody(w, responseBody{msg: "password incorrect", data: nil})
+		formatResponseBody(w, responseBody{Msg: "password incorrect", Data: nil})
 		return
 	}
 	// TODO: session and set cookie
-	formatResponseBody(w, responseBody{msg: "success", data: user})
+	formatResponseBody(w, responseBody{Msg: "success", Data: user})
 }
 
 func logout(w http.ResponseWriter, r *http.Request) {}

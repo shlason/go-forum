@@ -6,9 +6,9 @@ import (
 )
 
 type responseBody struct {
-	msg  string
-	code string
-	data interface{}
+	Msg  string
+	Code string
+	Data interface{}
 }
 
 func formatResponseBody(w http.ResponseWriter, body responseBody) {
