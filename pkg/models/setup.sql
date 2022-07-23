@@ -13,7 +13,7 @@ CREATE TABLE `users` (
     `email` varchar(255) NOT NULL,
     `password` varchar(255) NOT NULL,
     `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` timestamp ON UPDATE CURRENT_TIMESTAMP,
+    `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE KEY `name` (`name`),
     UNIQUE KEY `email` (`email`)
@@ -23,6 +23,7 @@ CREATE TABLE `sessions` (
     `id` int unsigned NOT NULL AUTO_INCREMENT,
     `uuid` varchar(255) NOT NULL,
     `user_id` int unsigned NOT NULL,
+    `expiry` timestamp NOT NULL,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uuid` (`uuid`),
     FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
@@ -34,7 +35,7 @@ CREATE TABLE `threads` (
     `subject` varchar(255) NOT NULL,
     `user_id` int unsigned NOT NULL,
     `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` timestamp ON UPDATE CURRENT_TIMESTAMP,
+    `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uuid` (`uuid`),
     FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
@@ -47,7 +48,7 @@ CREATE TABLE `posts` (
     `user_id` int unsigned NOT NULL,
     `thread_id` int unsigned NOT NULL,
     `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` timestamp ON UPDATE CURRENT_TIMESTAMP,
+    `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uuid` (`uuid`),
     FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
