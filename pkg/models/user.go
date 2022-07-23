@@ -21,18 +21,16 @@ func (u *User) Create() error {
 		return err
 	}
 	_, err = db.Exec("INSERT INTO users (name, email, password) VALUES (?, ?, ?)", u.Name, u.Email, hp)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func (u *User) ReadByName() error {
-	return db.QueryRow("SELECT email, password, created_at, updated_at WHERE name = ?", u.Name).
+	return db.QueryRow("SELECT email, password, created_at, updated_at FROM users WHERE name = ?", u.Name).
 		Scan(&u.Email, &u.Password, &u.CreatedAt, &u.UpdatedAt)
 }
 
 func (u *User) ReadByEmail() error {
-	return db.QueryRow("SELECT name, password, created_at, updated_at WHERE email = ?", u.Email).
+	return db.QueryRow("SELECT name, password, created_at, updated_at FROM users WHERE email = ?", u.Email).
 		Scan(&u.Name, &u.Password, &u.CreatedAt, &u.UpdatedAt)
 }
