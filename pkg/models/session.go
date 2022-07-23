@@ -19,7 +19,12 @@ func (s *Session) ReadByUserID() error {
 		Scan(&s.ID, &s.UUID, &s.Expiry)
 }
 
-func (s *Session) Update() error {
-	_, err := db.Exec("UPDATE session SET uuid = ?, expiry = ? WHERE id = ?", s.UUID, s.Expiry, s.ID)
+func (s *Session) UpdateByUserID() error {
+	_, err := db.Exec("UPDATE sessions SET uuid = ?, expiry = ? WHERE id = ?", s.UUID, s.Expiry, s.ID)
+	return err
+}
+
+func (s *Session) UpdateByUUID() error {
+	_, err := db.Exec("UPDATE sessions SET uuid = ?, expiry = ? WHERE uuid = ?", s.UUID, s.Expiry, s.UUID)
 	return err
 }
