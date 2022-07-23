@@ -127,13 +127,23 @@ func login(w http.ResponseWriter, r *http.Request) {
 	session.Expiry = time.Now().Add(sessionTokenExpiry)
 
 	if err == sql.ErrNoRows {
-		session.Create()
+		err := session.Create()
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			formatResponseBody(w, responseBody{Msg: fmt.Sprintf("%s\n%s", err, debug.Stack()), Data: nil})
+			return
+		}
 	} else if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		formatResponseBody(w, responseBody{Msg: fmt.Sprintf("%s\n%s", err, debug.Stack()), Data: nil})
 		return
 	} else {
-		session.Update()
+		err := session.UpdateByUserID()
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			formatResponseBody(w, responseBody{Msg: fmt.Sprintf("%s\n%s", err, debug.Stack()), Data: nil})
+			return
+		}
 	}
 
 	http.SetCookie(w, &http.Cookie{
@@ -147,7 +157,29 @@ func login(w http.ResponseWriter, r *http.Request) {
 	formatResponseBody(w, responseBody{Msg: "success", Data: user})
 }
 
-func logout(w http.ResponseWriter, r *http.Request) {}
+func logout(w http.ResponseWriter, r *http.Request) {
+	c, _ := r.Cookie(sessionTokenName)
+	session := models.Session{
+		UUID:   c.Value,
+		Expiry: time.Now(),
+	}
+	err := session.UpdateByUUID()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		formatResponseBody(w, responseBody{Msg: fmt.Sprintf("%s\n%s", err, debug.Stack()), Data: nil})
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     sessionTokenName,
+		Value:    "",
+		Expires:  session.Expiry,
+		HttpOnly: true,
+		Path:     "/",
+	})
+
+	formatResponseBody(w, responseBody{Msg: "success", Data: nil})
+}
 
 var Auth = auth{
 	Signup: http.HandlerFunc(signup),
