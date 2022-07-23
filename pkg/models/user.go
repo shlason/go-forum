@@ -26,11 +26,11 @@ func (u *User) Create() error {
 }
 
 func (u *User) ReadByName() error {
-	return db.QueryRow("SELECT email, password, created_at, updated_at FROM users WHERE name = ?", u.Name).
-		Scan(&u.Email, &u.Password, &u.CreatedAt, &u.UpdatedAt)
+	return db.QueryRow("SELECT id, email, password, created_at, updated_at FROM users WHERE name = ?", u.Name).
+		Scan(&u.ID, &u.Email, &u.Password, &u.CreatedAt, &u.UpdatedAt)
 }
 
 func (u *User) ReadByEmail() error {
-	return db.QueryRow("SELECT name, password, created_at, updated_at FROM users WHERE email = ?", u.Email).
-		Scan(&u.Name, &u.Password, &u.CreatedAt, &u.UpdatedAt)
+	return db.QueryRow("SELECT id, name, password, created_at, updated_at FROM users WHERE email = ?", u.Email).
+		Scan(&u.ID, &u.Name, &u.Password, &u.CreatedAt, &u.UpdatedAt)
 }
