@@ -23,8 +23,7 @@ func signup(w http.ResponseWriter, r *http.Request) {
 	err := utils.ParseBody(r, user)
 
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		formatResponseBody(w, responseBody{Msg: fmt.Sprintf("%s\n%s", err, debug.Stack()), Data: nil})
+		handleInternalErr(w, err)
 		return
 	}
 	if user.Email == "" || user.Name == "" || user.Password == "" {
@@ -39,8 +38,7 @@ func signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != sql.ErrNoRows {
-		w.WriteHeader(http.StatusInternalServerError)
-		formatResponseBody(w, responseBody{Msg: fmt.Sprintf("%s\n%s", err, debug.Stack()), Data: nil})
+		handleInternalErr(w, err)
 		return
 	}
 	err = user.ReadByName()
@@ -50,14 +48,12 @@ func signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != sql.ErrNoRows {
-		w.WriteHeader(http.StatusInternalServerError)
-		formatResponseBody(w, responseBody{Msg: fmt.Sprintf("%s\n%s", err, debug.Stack()), Data: nil})
+		handleInternalErr(w, err)
 		return
 	}
 	err = user.Create()
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		formatResponseBody(w, responseBody{Msg: fmt.Sprintf("%s\n%s", err, debug.Stack()), Data: nil})
+		handleInternalErr(w, err)
 		return
 	}
 	formatResponseBody(w, responseBody{Msg: fmt.Sprintf("%s", err), Data: user})
@@ -74,8 +70,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	user := &models.User{}
 	err := utils.ParseBody(r, user)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		formatResponseBody(w, responseBody{Msg: fmt.Sprintf("%s\n%s", err, debug.Stack()), Data: nil})
+		handleInternalErr(w, err)
 		return
 	}
 	if (user.Email == "" && user.Name == "") || user.Password == "" {
@@ -108,8 +103,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		formatResponseBody(w, responseBody{Msg: fmt.Sprintf("%s\n%s", err, debug.Stack()), Data: nil})
+		handleInternalErr(w, err)
 		return
 	}
 	if !utils.CheckPasswordHash(user.Password, rpwd) {
@@ -129,19 +123,16 @@ func login(w http.ResponseWriter, r *http.Request) {
 	if err == sql.ErrNoRows {
 		err := session.Create()
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			formatResponseBody(w, responseBody{Msg: fmt.Sprintf("%s\n%s", err, debug.Stack()), Data: nil})
+			handleInternalErr(w, err)
 			return
 		}
 	} else if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		formatResponseBody(w, responseBody{Msg: fmt.Sprintf("%s\n%s", err, debug.Stack()), Data: nil})
+		handleInternalErr(w, err)
 		return
 	} else {
 		err := session.UpdateByUserID()
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			formatResponseBody(w, responseBody{Msg: fmt.Sprintf("%s\n%s", err, debug.Stack()), Data: nil})
+			handleInternalErr(w, err)
 			return
 		}
 	}
@@ -165,8 +156,7 @@ func logout(w http.ResponseWriter, r *http.Request) {
 	}
 	err := session.UpdateByUUID()
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		formatResponseBody(w, responseBody{Msg: fmt.Sprintf("%s\n%s", err, debug.Stack()), Data: nil})
+		handleInternalErr(w, err)
 		return
 	}
 
@@ -179,6 +169,11 @@ func logout(w http.ResponseWriter, r *http.Request) {
 	})
 
 	formatResponseBody(w, responseBody{Msg: "success", Data: nil})
+}
+
+func handleInternalErr(w http.ResponseWriter, err error) {
+	w.WriteHeader(http.StatusInternalServerError)
+	formatResponseBody(w, responseBody{Msg: fmt.Sprintf("%s\n%s", err, debug.Stack()), Data: nil})
 }
 
 var Auth = auth{
