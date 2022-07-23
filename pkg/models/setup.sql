@@ -23,6 +23,7 @@ CREATE TABLE `sessions` (
     `id` int unsigned NOT NULL AUTO_INCREMENT,
     `uuid` varchar(255) NOT NULL,
     `user_id` int unsigned NOT NULL,
+    `expiry` timestamp NOT NULL,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uuid` (`uuid`),
     FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
