@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/shlason/go-forum/pkg/configs"
 )
 
