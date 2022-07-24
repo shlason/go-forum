@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/shlason/go-forum/pkg/constants"
 	"github.com/shlason/go-forum/pkg/models"
 	"github.com/shlason/go-forum/pkg/utils"
 )
@@ -63,8 +64,6 @@ var accountTypes = map[string]string{
 	"email": "email",
 	"name":  "name",
 }
-var sessionTokenExpiry time.Duration = 6 * time.Hour
-var sessionTokenName string = "_SID"
 
 func login(w http.ResponseWriter, r *http.Request) {
 	user := &models.User{}
@@ -121,7 +120,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	err = session.ReadByUserID()
 
 	session.UUID = uuid.New().String()
-	session.Expiry = time.Now().Add(sessionTokenExpiry)
+	session.Expiry = time.Now().Add(constants.Cookie.SessionTokenExpiry)
 
 	if err == sql.ErrNoRows {
 		err := session.Create()
@@ -141,7 +140,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     sessionTokenName,
+		Name:     constants.Cookie.SessionTokenName,
 		Value:    session.UUID,
 		Expires:  session.Expiry,
 		HttpOnly: true,
@@ -152,7 +151,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 }
 
 func logout(w http.ResponseWriter, r *http.Request) {
-	c, _ := r.Cookie(sessionTokenName)
+	c, _ := r.Cookie(constants.Cookie.SessionTokenName)
 	session := models.Session{
 		UUID:   c.Value,
 		Expiry: time.Now(),
@@ -164,7 +163,7 @@ func logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     sessionTokenName,
+		Name:     constants.Cookie.SessionTokenName,
 		Value:    "",
 		Expires:  session.Expiry,
 		HttpOnly: true,
