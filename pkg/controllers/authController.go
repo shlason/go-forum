@@ -115,6 +115,9 @@ func login(w http.ResponseWriter, r *http.Request) {
 	session := models.Session{
 		UserID: user.ID,
 	}
+
+	// TODO: sql INSERT ... ON DUPLICATE KEY UPDATE 目前遇到更新不了的問題
+	// 應該優化這一段，感覺沒必要 query 兩次 (第一次先讀來判斷 第二次依據結果建立或更新)，以及因為跑兩次導致後續的 error handle 很不優雅
 	err = session.ReadByUserID()
 
 	session.UUID = uuid.New().String()
