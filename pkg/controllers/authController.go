@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/shlason/go-forum/pkg/constants"
 	"github.com/shlason/go-forum/pkg/models"
 	"github.com/shlason/go-forum/pkg/utils"
 )
@@ -18,6 +19,8 @@ type auth struct {
 	Logout http.Handler
 }
 
+// TODO: 將 Response Body 從 utils 抽出來自立一個 package 來定義 struct
+// TODO: 將 Request Body 的 Struct 和 Model 的 Struct 解耦來更彈性一點，以及控制資料的可見度
 func signup(w http.ResponseWriter, r *http.Request) {
 	user := &models.User{}
 	err := utils.ParseBody(r, user)
@@ -28,13 +31,13 @@ func signup(w http.ResponseWriter, r *http.Request) {
 	}
 	if user.Email == "" || user.Name == "" || user.Password == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		formatResponseBody(w, responseBody{Msg: "params invalid or not enough", Data: nil})
+		utils.FormatResponseBody(w, utils.ResponseBody{Msg: "params invalid or not enough", Data: nil})
 		return
 	}
 	err = user.ReadByEmail()
 	if err == nil {
 		w.WriteHeader(http.StatusConflict)
-		formatResponseBody(w, responseBody{Msg: "email already exist", Data: nil})
+		utils.FormatResponseBody(w, utils.ResponseBody{Msg: "email already exist", Data: nil})
 		return
 	}
 	if err != sql.ErrNoRows {
@@ -44,7 +47,7 @@ func signup(w http.ResponseWriter, r *http.Request) {
 	err = user.ReadByName()
 	if err == nil {
 		w.WriteHeader(http.StatusConflict)
-		formatResponseBody(w, responseBody{Msg: "user name already exist", Data: nil})
+		utils.FormatResponseBody(w, utils.ResponseBody{Msg: "user name already exist", Data: nil})
 		return
 	}
 	if err != sql.ErrNoRows {
@@ -56,15 +59,13 @@ func signup(w http.ResponseWriter, r *http.Request) {
 		handleInternalErr(w, err)
 		return
 	}
-	formatResponseBody(w, responseBody{Msg: fmt.Sprintf("%s", err), Data: user})
+	utils.FormatResponseBody(w, utils.ResponseBody{Msg: fmt.Sprintf("%s", err), Data: user})
 }
 
 var accountTypes = map[string]string{
 	"email": "email",
 	"name":  "name",
 }
-var sessionTokenExpiry time.Duration = 6 * time.Hour
-var sessionTokenName string = "_SID"
 
 func login(w http.ResponseWriter, r *http.Request) {
 	user := &models.User{}
@@ -75,7 +76,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 	if (user.Email == "" && user.Name == "") || user.Password == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		formatResponseBody(w, responseBody{Msg: "params invalid or not enough", Data: nil})
+		utils.FormatResponseBody(w, utils.ResponseBody{Msg: "params invalid or not enough", Data: nil})
 		return
 	}
 
@@ -99,7 +100,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 	if err == sql.ErrNoRows {
 		w.WriteHeader(http.StatusBadRequest)
-		formatResponseBody(w, responseBody{Msg: fmt.Sprintf("user %s not found", accountType), Data: nil})
+		utils.FormatResponseBody(w, utils.ResponseBody{Msg: fmt.Sprintf("user %s not found", accountType), Data: nil})
 		return
 	}
 	if err != nil {
@@ -108,7 +109,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 	if !utils.CheckPasswordHash(user.Password, rpwd) {
 		w.WriteHeader(http.StatusBadRequest)
-		formatResponseBody(w, responseBody{Msg: "password incorrect", Data: nil})
+		utils.FormatResponseBody(w, utils.ResponseBody{Msg: "password incorrect", Data: nil})
 		return
 	}
 
@@ -121,7 +122,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	err = session.ReadByUserID()
 
 	session.UUID = uuid.New().String()
-	session.Expiry = time.Now().Add(sessionTokenExpiry)
+	session.Expiry = time.Now().Add(constants.Cookie.SessionTokenExpiry)
 
 	if err == sql.ErrNoRows {
 		err := session.Create()
@@ -141,18 +142,18 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     sessionTokenName,
+		Name:     constants.Cookie.SessionTokenName,
 		Value:    session.UUID,
 		Expires:  session.Expiry,
 		HttpOnly: true,
 		Path:     "/",
 	})
 
-	formatResponseBody(w, responseBody{Msg: "success", Data: user})
+	utils.FormatResponseBody(w, utils.ResponseBody{Msg: "success", Data: user})
 }
 
 func logout(w http.ResponseWriter, r *http.Request) {
-	c, _ := r.Cookie(sessionTokenName)
+	c, _ := r.Cookie(constants.Cookie.SessionTokenName)
 	session := models.Session{
 		UUID:   c.Value,
 		Expiry: time.Now(),
@@ -164,19 +165,19 @@ func logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     sessionTokenName,
+		Name:     constants.Cookie.SessionTokenName,
 		Value:    "",
 		Expires:  session.Expiry,
 		HttpOnly: true,
 		Path:     "/",
 	})
 
-	formatResponseBody(w, responseBody{Msg: "success", Data: nil})
+	utils.FormatResponseBody(w, utils.ResponseBody{Msg: "success", Data: nil})
 }
 
 func handleInternalErr(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusInternalServerError)
-	formatResponseBody(w, responseBody{Msg: fmt.Sprintf("%s\n%s", err, debug.Stack()), Data: nil})
+	utils.FormatResponseBody(w, utils.ResponseBody{Msg: fmt.Sprintf("%s\n%s", err, debug.Stack()), Data: nil})
 }
 
 var Auth = auth{
