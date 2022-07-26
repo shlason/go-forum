@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/shlason/go-forum/pkg/constants"
 	"github.com/shlason/go-forum/pkg/models"
+	"github.com/shlason/go-forum/pkg/structs"
 	"github.com/shlason/go-forum/pkg/utils"
 )
 
@@ -19,7 +20,6 @@ type auth struct {
 	Logout http.Handler
 }
 
-// TODO: 將 Response Body 從 utils 抽出來自立一個 package 來定義 struct
 // TODO: 將 Request Body 的 Struct 和 Model 的 Struct 解耦來更彈性一點，以及控制資料的可見度
 func signup(w http.ResponseWriter, r *http.Request) {
 	user := &models.User{}
@@ -31,13 +31,13 @@ func signup(w http.ResponseWriter, r *http.Request) {
 	}
 	if user.Email == "" || user.Name == "" || user.Password == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		utils.FormatResponseBody(w, utils.ResponseBody{Msg: "params invalid or not enough", Data: nil})
+		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "params invalid or not enough", Data: nil})
 		return
 	}
 	err = user.ReadByEmail()
 	if err == nil {
 		w.WriteHeader(http.StatusConflict)
-		utils.FormatResponseBody(w, utils.ResponseBody{Msg: "email already exist", Data: nil})
+		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "email already exist", Data: nil})
 		return
 	}
 	if err != sql.ErrNoRows {
@@ -47,7 +47,7 @@ func signup(w http.ResponseWriter, r *http.Request) {
 	err = user.ReadByName()
 	if err == nil {
 		w.WriteHeader(http.StatusConflict)
-		utils.FormatResponseBody(w, utils.ResponseBody{Msg: "user name already exist", Data: nil})
+		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "user name already exist", Data: nil})
 		return
 	}
 	if err != sql.ErrNoRows {
@@ -59,7 +59,7 @@ func signup(w http.ResponseWriter, r *http.Request) {
 		handleInternalErr(w, err)
 		return
 	}
-	utils.FormatResponseBody(w, utils.ResponseBody{Msg: fmt.Sprintf("%s", err), Data: user})
+	structs.WriteResponseBody(w, structs.ResponseBody{Msg: fmt.Sprintf("%s", err), Data: user})
 }
 
 var accountTypes = map[string]string{
@@ -76,7 +76,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 	if (user.Email == "" && user.Name == "") || user.Password == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		utils.FormatResponseBody(w, utils.ResponseBody{Msg: "params invalid or not enough", Data: nil})
+		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "params invalid or not enough", Data: nil})
 		return
 	}
 
@@ -100,7 +100,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 	if err == sql.ErrNoRows {
 		w.WriteHeader(http.StatusBadRequest)
-		utils.FormatResponseBody(w, utils.ResponseBody{Msg: fmt.Sprintf("user %s not found", accountType), Data: nil})
+		structs.WriteResponseBody(w, structs.ResponseBody{Msg: fmt.Sprintf("user %s not found", accountType), Data: nil})
 		return
 	}
 	if err != nil {
@@ -109,7 +109,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 	if !utils.CheckPasswordHash(user.Password, rpwd) {
 		w.WriteHeader(http.StatusBadRequest)
-		utils.FormatResponseBody(w, utils.ResponseBody{Msg: "password incorrect", Data: nil})
+		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "password incorrect", Data: nil})
 		return
 	}
 
@@ -149,7 +149,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 	})
 
-	utils.FormatResponseBody(w, utils.ResponseBody{Msg: "success", Data: user})
+	structs.WriteResponseBody(w, structs.ResponseBody{Msg: "success", Data: user})
 }
 
 func logout(w http.ResponseWriter, r *http.Request) {
@@ -172,12 +172,12 @@ func logout(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 	})
 
-	utils.FormatResponseBody(w, utils.ResponseBody{Msg: "success", Data: nil})
+	structs.WriteResponseBody(w, structs.ResponseBody{Msg: "success", Data: nil})
 }
 
 func handleInternalErr(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusInternalServerError)
-	utils.FormatResponseBody(w, utils.ResponseBody{Msg: fmt.Sprintf("%s\n%s", err, debug.Stack()), Data: nil})
+	structs.WriteResponseBody(w, structs.ResponseBody{Msg: fmt.Sprintf("%s\n%s", err, debug.Stack()), Data: nil})
 }
 
 var Auth = auth{

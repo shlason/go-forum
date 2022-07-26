@@ -7,7 +7,7 @@ import (
 
 	"github.com/shlason/go-forum/pkg/constants"
 	"github.com/shlason/go-forum/pkg/models"
-	"github.com/shlason/go-forum/pkg/utils"
+	"github.com/shlason/go-forum/pkg/structs"
 )
 
 func Auth() middlewareHandler {
@@ -16,7 +16,7 @@ func Auth() middlewareHandler {
 			c, err := r.Cookie(constants.Cookie.SessionTokenName)
 			if err != nil {
 				w.WriteHeader(http.StatusUnauthorized)
-				utils.FormatResponseBody(w, utils.ResponseBody{Msg: "Unauthorized", Data: nil})
+				structs.WriteResponseBody(w, structs.ResponseBody{Msg: "Unauthorized", Data: nil})
 				return
 			}
 			session := models.Session{
@@ -26,7 +26,7 @@ func Auth() middlewareHandler {
 			if err != nil {
 				if err == sql.ErrNoRows {
 					w.WriteHeader(http.StatusUnauthorized)
-					utils.FormatResponseBody(w, utils.ResponseBody{Msg: "Unauthorized", Data: nil})
+					structs.WriteResponseBody(w, structs.ResponseBody{Msg: "Unauthorized", Data: nil})
 					return
 				}
 				w.WriteHeader(http.StatusInternalServerError)
@@ -34,7 +34,7 @@ func Auth() middlewareHandler {
 			}
 			if !time.Now().Before(session.Expiry) {
 				w.WriteHeader(http.StatusUnauthorized)
-				utils.FormatResponseBody(w, utils.ResponseBody{Msg: "Unauthorized", Data: nil})
+				structs.WriteResponseBody(w, structs.ResponseBody{Msg: "Unauthorized", Data: nil})
 				return
 			}
 			h.ServeHTTP(w, r)
