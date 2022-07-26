@@ -1,4 +1,4 @@
-package utils
+package structs
 
 import (
 	"encoding/json"
@@ -11,7 +11,7 @@ type ResponseBody struct {
 	Data interface{} `json:"data"`
 }
 
-func FormatResponseBody(w http.ResponseWriter, body ResponseBody) {
+func WriteResponseBody(w http.ResponseWriter, body ResponseBody) {
 	res, _ := json.Marshal(body)
 	w.Write(res)
 }
