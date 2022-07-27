@@ -7,12 +7,12 @@ import (
 )
 
 type User struct {
-	ID        int
-	Name      string
-	Email     string
-	Password  string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        int       `json:"id"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	Password  string    `json:"password"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAte"`
 }
 
 func (u *User) Create() error {
@@ -33,4 +33,9 @@ func (u *User) ReadByName() error {
 func (u *User) ReadByEmail() error {
 	return db.QueryRow("SELECT id, name, password, created_at, updated_at FROM users WHERE email = ?", u.Email).
 		Scan(&u.ID, &u.Name, &u.Password, &u.CreatedAt, &u.UpdatedAt)
+}
+
+func (u *User) ReadByUserID() error {
+	return db.QueryRow("SELECT name, email, password, created_at, updated_at FROM users WHERE id = ?", u.ID).
+		Scan(&u.Name, &u.Email, &u.Password, &u.CreatedAt, &u.UpdatedAt)
 }
