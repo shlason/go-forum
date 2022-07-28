@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"runtime/debug"
 	"time"
 
 	"github.com/google/uuid"
@@ -173,11 +172,6 @@ func logout(w http.ResponseWriter, r *http.Request) {
 	})
 
 	structs.WriteResponseBody(w, structs.ResponseBody{Msg: "success", Data: nil})
-}
-
-func handleInternalErr(w http.ResponseWriter, err error) {
-	w.WriteHeader(http.StatusInternalServerError)
-	structs.WriteResponseBody(w, structs.ResponseBody{Msg: fmt.Sprintf("%s\n%s", err, debug.Stack()), Data: nil})
 }
 
 var Auth = auth{
