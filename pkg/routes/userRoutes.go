@@ -8,5 +8,5 @@ import (
 
 func RegisteUserRoutes(router *mux.Router) {
 	router.Handle("/users/info", middlewares.Adapt(controllers.User.GetUsers, middlewares.Header())).Methods("GET")
-	router.Handle("/users/info", middlewares.Adapt(controllers.User.PatchUsers, middlewares.Auth(), middlewares.Header())).Methods("PATCH")
+	router.Handle("/users/info", middlewares.Adapt(controllers.User.PatchUser, middlewares.Auth(), middlewares.Header())).Methods("PATCH")
 }

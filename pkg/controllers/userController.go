@@ -8,11 +8,12 @@ import (
 
 	"github.com/shlason/go-forum/pkg/models"
 	"github.com/shlason/go-forum/pkg/structs"
+	"github.com/shlason/go-forum/pkg/utils"
 )
 
 type user struct {
-	GetUsers   http.Handler
-	PatchUsers http.Handler
+	GetUsers  http.Handler
+	PatchUser http.Handler
 }
 
 type userResponse struct {
@@ -69,9 +70,32 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	}})
 }
 
-func patchUsers(w http.ResponseWriter, r *http.Request) {}
+type patchUserPayload struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+func patchUser(w http.ResponseWriter, r *http.Request) {
+	var err error
+	payload := patchUserPayload{}
+	userId := r.URL.Query().Get("userId")
+	if userId == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "user id params", Data: nil})
+		return
+	}
+	err = utils.ParseBody(r, payload)
+	if err != nil {
+		handleInternalErr(w, err)
+		return
+	}
+	if payload.Name != "" {
+
+	}
+}
 
 var User = user{
-	GetUsers:   http.HandlerFunc(getUsers),
-	PatchUsers: http.HandlerFunc(patchUsers),
+	GetUsers:  http.HandlerFunc(getUsers),
+	PatchUser: http.HandlerFunc(patchUser),
 }
