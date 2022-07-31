@@ -26,7 +26,7 @@ func (u *User) Create() error {
 }
 
 func (u *User) ReadAll() ([]User, error) {
-	rows, err := db.Query("SELECT id, email, password, created_at, updated_at FROM users")
+	rows, err := db.Query("SELECT id, name, email, password, created_at, updated_at FROM users")
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func (u *User) ReadAll() ([]User, error) {
 	var users []User
 	for rows.Next() {
 		user := User{}
-		if err := rows.Scan(&user.ID, &user.Name, &user.Password, &user.CreatedAt, &user.UpdatedAt); err != nil {
+		if err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt); err != nil {
 			return nil, err
 		}
 		users = append(users, user)

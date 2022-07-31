@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"database/sql"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/shlason/go-forum/pkg/models"
@@ -16,12 +18,13 @@ type user struct {
 type userResponse struct {
 	ID        int       `json:"id"`
 	Name      string    `json:"name"`
-	Email     string    `json:"eamil"`
+	Email     string    `json:"email"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 func getUsers(w http.ResponseWriter, r *http.Request) {
+	var err error
 	user := models.User{}
 	userId := r.URL.Query().Get("userId")
 	if userId == "" {
@@ -43,6 +46,27 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "success", Data: res})
 		return
 	}
+	user.ID, err = strconv.Atoi(userId)
+	if err != nil {
+		handleInternalErr(w, err)
+		return
+	}
+	err = user.ReadByUserID()
+	if err != nil {
+		if err == sql.ErrNoRows {
+			structs.WriteResponseBody(w, structs.ResponseBody{Msg: "success", Data: nil})
+			return
+		}
+		handleInternalErr(w, err)
+		return
+	}
+	structs.WriteResponseBody(w, structs.ResponseBody{Msg: "success", Data: userResponse{
+		ID:        user.ID,
+		Name:      user.Name,
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}})
 }
 
 func patchUsers(w http.ResponseWriter, r *http.Request) {}
