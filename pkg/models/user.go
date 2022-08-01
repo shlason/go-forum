@@ -56,3 +56,13 @@ func (u *User) ReadByUserID() error {
 	return db.QueryRow("SELECT name, email, password, created_at, updated_at FROM users WHERE id = ?", u.ID).
 		Scan(&u.Name, &u.Email, &u.Password, &u.CreatedAt, &u.UpdatedAt)
 }
+
+func (u *User) UpdateUserPasswordByUserID() error {
+	hp, err := utils.HashPassword(u.Password)
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec("UPDATE users SET password = ? WHERE id = ?", hp, u.ID)
+
+	return err
+}
