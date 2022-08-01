@@ -71,14 +71,13 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 type patchUserPayload struct {
-	Name     string `json:"name"`
-	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
+// TODO: 增加權限檢查，確認是否有權限修改對應 User ID 的資訊
 func patchUser(w http.ResponseWriter, r *http.Request) {
 	var err error
-	payload := patchUserPayload{}
+	payload := &patchUserPayload{}
 	userId := r.URL.Query().Get("userId")
 	if userId == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -90,9 +89,24 @@ func patchUser(w http.ResponseWriter, r *http.Request) {
 		handleInternalErr(w, err)
 		return
 	}
-	if payload.Name != "" {
-
+	if payload.Password == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "password invalid", Data: nil})
+		return
 	}
+	user := models.User{}
+	user.ID, err = strconv.Atoi(userId)
+	if err != nil {
+		handleInternalErr(w, err)
+		return
+	}
+	user.Password = payload.Password
+	err = user.UpdateUserPasswordByUserID()
+	if err != nil {
+		handleInternalErr(w, err)
+		return
+	}
+	structs.WriteResponseBody(w, structs.ResponseBody{Msg: "success", Data: nil})
 }
 
 var User = user{
