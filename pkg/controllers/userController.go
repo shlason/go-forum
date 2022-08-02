@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/shlason/go-forum/pkg/constants"
 	"github.com/shlason/go-forum/pkg/models"
 	"github.com/shlason/go-forum/pkg/structs"
 	"github.com/shlason/go-forum/pkg/utils"
@@ -74,14 +75,34 @@ type patchUserPayload struct {
 	Password string `json:"password"`
 }
 
-// TODO: 增加權限檢查，確認是否有權限修改對應 User ID 的資訊
 func patchUser(w http.ResponseWriter, r *http.Request) {
 	var err error
+	// Auth middleware 檢查過了，這邊忽略 error
+	c, _ := r.Cookie(constants.Cookie.SessionTokenName)
+	session := models.Session{
+		UUID: c.Value,
+	}
+	err = session.ReadByUUID()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	payload := &patchUserPayload{}
 	userId := r.URL.Query().Get("userId")
 	if userId == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "user id params", Data: nil})
+		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "need user id params", Data: nil})
+		return
+	}
+	user := models.User{}
+	user.ID, err = strconv.Atoi(userId)
+	if err != nil {
+		handleInternalErr(w, err)
+		return
+	}
+	if user.ID != session.UserID {
+		w.WriteHeader(http.StatusUnauthorized)
+		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "Unauthorized", Data: nil})
 		return
 	}
 	err = utils.ParseBody(r, payload)
@@ -92,12 +113,6 @@ func patchUser(w http.ResponseWriter, r *http.Request) {
 	if payload.Password == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "password invalid", Data: nil})
-		return
-	}
-	user := models.User{}
-	user.ID, err = strconv.Atoi(userId)
-	if err != nil {
-		handleInternalErr(w, err)
 		return
 	}
 	user.Password = payload.Password
