@@ -12,7 +12,7 @@ type Thread struct {
 }
 
 func (t *Thread) ReadAll() ([]Thread, error) {
-	rows, err := db.Query("SELECT id, uuid, subject, user_id, createdAt, updatedAt FROM threads")
+	rows, err := db.Query("SELECT id, uuid, subject, user_id, created_at, updated_at FROM threads")
 	if err != nil {
 		return nil, err
 	}
