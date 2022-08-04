@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/shlason/go-forum/pkg/constants"
 	"github.com/shlason/go-forum/pkg/models"
 	"github.com/shlason/go-forum/pkg/structs"
 	"github.com/shlason/go-forum/pkg/utils"
@@ -77,12 +76,7 @@ type patchUserPayload struct {
 
 func patchUser(w http.ResponseWriter, r *http.Request) {
 	var err error
-	// Auth middleware 檢查過了，這邊忽略 error
-	c, _ := r.Cookie(constants.Cookie.SessionTokenName)
-	session := models.Session{
-		UUID: c.Value,
-	}
-	err = session.ReadByUUID()
+	session, err := getSession(r)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
