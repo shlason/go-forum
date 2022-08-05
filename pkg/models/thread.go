@@ -1,6 +1,10 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Thread struct {
 	ID        int       `json:"id"`
@@ -9,6 +13,11 @@ type Thread struct {
 	UserID    int       `json:"userId"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+func (t *Thread) Create() error {
+	_, err := db.Exec("INSERT INTO threads (uuid, subject, user_id) VALUES (?, ?, ?)", uuid.New().String(), t.Subject, t.UserID)
+	return err
 }
 
 func (t *Thread) ReadAll() ([]Thread, error) {
