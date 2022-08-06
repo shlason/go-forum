@@ -90,8 +90,59 @@ func getThreadById(w http.ResponseWriter, r *http.Request) {
 	structs.WriteResponseBody(w, structs.ResponseBody{Msg: "success", Data: thread})
 }
 
-func updateThread(w http.ResponseWriter, r *http.Request) {
+type patchThreadPayload struct {
+	Subject string `json:"subject"`
+}
 
+func updateThread(w http.ResponseWriter, r *http.Request) {
+	session, err := getSession(r)
+	if err != nil {
+		handleInternalErr(w, err)
+		return
+	}
+	params := mux.Vars(r)
+	threadID := params["threadID"]
+	tid, err := strconv.Atoi(threadID)
+	if err != nil {
+		handleInternalErr(w, err)
+		return
+	}
+	thread := models.Thread{
+		ID: tid,
+	}
+	err = thread.ReadByID()
+	if err != nil {
+		if err != sql.ErrNoRows {
+			handleInternalErr(w, err)
+			return
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "thread not found", Data: nil})
+		return
+	}
+	if thread.UserID != session.UserID {
+		w.WriteHeader(http.StatusUnauthorized)
+		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "unauthorized", Data: nil})
+		return
+	}
+	payload := &patchThreadPayload{}
+	err = utils.ParseBody(r, payload)
+	if err != nil {
+		handleInternalErr(w, err)
+		return
+	}
+	if payload.Subject == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "subject invalid", Data: nil})
+		return
+	}
+	thread.Subject = payload.Subject
+	err = thread.UpdateSubjectByID()
+	if err != nil {
+		handleInternalErr(w, err)
+		return
+	}
+	structs.WriteResponseBody(w, structs.ResponseBody{Msg: "success", Data: nil})
 }
 
 func getThreadRelatedPosts(w http.ResponseWriter, r *http.Request) {

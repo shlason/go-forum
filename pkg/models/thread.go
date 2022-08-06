@@ -41,3 +41,8 @@ func (t *Thread) ReadByID() error {
 	return db.QueryRow("SELECT uuid, subject, user_id, created_at, updated_at FROM threads WHERE id = ?", t.ID).Scan(
 		&t.UUID, &t.Subject, &t.UserID, &t.CreatedAt, &t.UpdatedAt)
 }
+
+func (t *Thread) UpdateSubjectByID() error {
+	_, err := db.Exec("UPDATE threads SET subject = ? WHERE id = ?", t.Subject, t.ID)
+	return err
+}
