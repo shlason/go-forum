@@ -36,3 +36,8 @@ func (t *Thread) ReadAll() ([]Thread, error) {
 	}
 	return threads, nil
 }
+
+func (t *Thread) ReadByID() error {
+	return db.QueryRow("SELECT uuid, subject, user_id, created_at, updated_at FROM threads WHERE id = ?", t.ID).Scan(
+		&t.UUID, &t.Subject, &t.UserID, &t.CreatedAt, &t.UpdatedAt)
+}

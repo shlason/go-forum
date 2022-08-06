@@ -3,7 +3,9 @@ package controllers
 import (
 	"database/sql"
 	"net/http"
+	"strconv"
 
+	"github.com/gorilla/mux"
 	"github.com/shlason/go-forum/pkg/models"
 	"github.com/shlason/go-forum/pkg/structs"
 	"github.com/shlason/go-forum/pkg/utils"
@@ -66,7 +68,26 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 }
 
 func getThreadById(w http.ResponseWriter, r *http.Request) {
-
+	params := mux.Vars(r)
+	threadID := params["threadID"]
+	tid, err := strconv.Atoi(threadID)
+	if err != nil {
+		handleInternalErr(w, err)
+		return
+	}
+	thread := models.Thread{
+		ID: tid,
+	}
+	err = thread.ReadByID()
+	if err != nil {
+		if err != sql.ErrNoRows {
+			handleInternalErr(w, err)
+			return
+		}
+		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "success", Data: nil})
+		return
+	}
+	structs.WriteResponseBody(w, structs.ResponseBody{Msg: "success", Data: thread})
 }
 
 func updateThread(w http.ResponseWriter, r *http.Request) {
