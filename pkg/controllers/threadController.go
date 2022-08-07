@@ -201,7 +201,24 @@ func createThreadRelatedPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func getThreadRelatedPosts(w http.ResponseWriter, r *http.Request) {
-
+	params := mux.Vars(r)
+	threadID := params["threadID"]
+	tid, err := strconv.Atoi(threadID)
+	if err != nil {
+		handleInternalErr(w, err)
+		return
+	}
+	p := models.Post{ThreadID: tid}
+	posts, err := p.ReadAllByThreadID()
+	if err != nil {
+		handleInternalErr(w, err)
+		return
+	}
+	// TODO: 待研究 - 和上面 getThreads controller 一樣，沒有資料找不到時，應該要噴 sql.ErrNoRows 才對，但這邊不會有錯
+	if posts == nil {
+		posts = make([]models.Post, 0)
+	}
+	structs.WriteResponseBody(w, structs.ResponseBody{Msg: "success", Data: posts})
 }
 
 var Thread = thread{
