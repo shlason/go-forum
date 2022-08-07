@@ -12,11 +12,12 @@ import (
 )
 
 type thread struct {
-	GetThreads            http.Handler
-	CreateThread          http.Handler
-	GetThreadById         http.Handler
-	UpdateThread          http.Handler
-	GetThreadRelatedPosts http.Handler
+	GetThreads              http.Handler
+	CreateThread            http.Handler
+	GetThreadById           http.Handler
+	UpdateThread            http.Handler
+	GetThreadRelatedPosts   http.Handler
+	CreateThreadRelatedPost http.Handler
 }
 
 func getThreads(w http.ResponseWriter, r *http.Request) {
@@ -145,14 +146,69 @@ func updateThread(w http.ResponseWriter, r *http.Request) {
 	structs.WriteResponseBody(w, structs.ResponseBody{Msg: "success", Data: nil})
 }
 
+type createThreadRelatedPostPayload struct {
+	Content string `json:"content"`
+}
+
+func createThreadRelatedPost(w http.ResponseWriter, r *http.Request) {
+	session, err := getSession(r)
+	if err != nil {
+		handleInternalErr(w, err)
+		return
+	}
+	params := mux.Vars(r)
+	threadID := params["threadID"]
+	tid, err := strconv.Atoi(threadID)
+	if err != nil {
+		handleInternalErr(w, err)
+		return
+	}
+	thread := models.Thread{
+		ID: tid,
+	}
+	err = thread.ReadByID()
+	if err != nil {
+		if err != sql.ErrNoRows {
+			handleInternalErr(w, err)
+			return
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "thread not found", Data: nil})
+		return
+	}
+	payload := &createThreadRelatedPostPayload{}
+	err = utils.ParseBody(r, payload)
+	if err != nil {
+		handleInternalErr(w, err)
+		return
+	}
+	if payload.Content == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "content invalid", Data: nil})
+		return
+	}
+	post := models.Post{
+		UserID:   session.UserID,
+		ThreadID: tid,
+		Content:  payload.Content,
+	}
+	err = post.Create()
+	if err != nil {
+		handleInternalErr(w, err)
+		return
+	}
+	structs.WriteResponseBody(w, structs.ResponseBody{Msg: "success", Data: nil})
+}
+
 func getThreadRelatedPosts(w http.ResponseWriter, r *http.Request) {
 
 }
 
 var Thread = thread{
-	GetThreads:            http.HandlerFunc(getThreads),
-	CreateThread:          http.HandlerFunc(createThread),
-	GetThreadById:         http.HandlerFunc(getThreadById),
-	UpdateThread:          http.HandlerFunc(updateThread),
-	GetThreadRelatedPosts: http.HandlerFunc(getThreadRelatedPosts),
+	GetThreads:              http.HandlerFunc(getThreads),
+	CreateThread:            http.HandlerFunc(createThread),
+	GetThreadById:           http.HandlerFunc(getThreadById),
+	UpdateThread:            http.HandlerFunc(updateThread),
+	GetThreadRelatedPosts:   http.HandlerFunc(getThreadRelatedPosts),
+	CreateThreadRelatedPost: http.HandlerFunc(createThreadRelatedPost),
 }
