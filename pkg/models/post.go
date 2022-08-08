@@ -21,6 +21,23 @@ func (p *Post) Create() error {
 	return err
 }
 
+func (p *Post) ReadAll() ([]Post, error) {
+	rows, err := db.Query("SELECT id, uuid, content, user_id, thread_id, created_at, updated_at FROM posts")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var posts []Post
+	for rows.Next() {
+		post := Post{}
+		if err := rows.Scan(&post.ID, &post.UUID, &post.Content, &post.UserID, &post.ThreadID, &post.CreatedAt, &post.UpdatedAt); err != nil {
+			return nil, err
+		}
+		posts = append(posts, post)
+	}
+	return posts, nil
+}
+
 func (p *Post) ReadAllByThreadID() ([]Post, error) {
 	rows, err := db.Query("SELECT id, uuid, content, user_id, thread_id, created_at, updated_at FROM posts WHERE thread_id = ?", p.ThreadID)
 	if err != nil {
