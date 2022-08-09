@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/shlason/go-forum/pkg/models"
 	"github.com/shlason/go-forum/pkg/structs"
 )
@@ -29,7 +30,21 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 }
 
 func getPostByID(w http.ResponseWriter, r *http.Request) {
-
+	params := mux.Vars(r)
+	postUUID := params["postUUID"]
+	post := models.Post{
+		UUID: postUUID,
+	}
+	err := post.ReadByUUID()
+	if err != nil {
+		if err != sql.ErrNoRows {
+			handleInternalErr(w, err)
+			return
+		}
+		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "success", Data: nil})
+		return
+	}
+	structs.WriteResponseBody(w, structs.ResponseBody{Msg: "success", Data: post})
 }
 
 func updatePost(w http.ResponseWriter, r *http.Request) {

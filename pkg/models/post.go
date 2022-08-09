@@ -38,6 +38,11 @@ func (p *Post) ReadAll() ([]Post, error) {
 	return posts, nil
 }
 
+func (p *Post) ReadByUUID() error {
+	return db.QueryRow("SELECT id, content, user_id, thread_id, created_at, updated_at FROM posts WHERE uuid = ?", p.UUID).Scan(
+		&p.ID, &p.Content, &p.UserID, &p.ThreadID, &p.CreatedAt, &p.UpdatedAt)
+}
+
 func (p *Post) ReadAllByThreadID() ([]Post, error) {
 	rows, err := db.Query("SELECT id, uuid, content, user_id, thread_id, created_at, updated_at FROM posts WHERE thread_id = ?", p.ThreadID)
 	if err != nil {
