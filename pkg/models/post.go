@@ -59,3 +59,8 @@ func (p *Post) ReadAllByThreadID() ([]Post, error) {
 	}
 	return posts, nil
 }
+
+func (p *Post) UpdateByUUID() error {
+	_, err := db.Exec("UPDATE posts SET content = ? WHERE uuid = ?", p.Content, p.UUID)
+	return err
+}

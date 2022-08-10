@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/shlason/go-forum/pkg/models"
 	"github.com/shlason/go-forum/pkg/structs"
+	"github.com/shlason/go-forum/pkg/utils"
 )
 
 type post struct {
@@ -47,8 +48,54 @@ func getPostByID(w http.ResponseWriter, r *http.Request) {
 	structs.WriteResponseBody(w, structs.ResponseBody{Msg: "success", Data: post})
 }
 
-func updatePost(w http.ResponseWriter, r *http.Request) {
+type patchPostPayload struct {
+	Content string `json:"content"`
+}
 
+func updatePost(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	postUUID := params["postUUID"]
+	post := models.Post{
+		UUID: postUUID,
+	}
+	err := post.ReadByUUID()
+	if err != nil {
+		if err != sql.ErrNoRows {
+			handleInternalErr(w, err)
+			return
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "post not found", Data: nil})
+		return
+	}
+	session, err := getSession(r)
+	if err != nil {
+		handleInternalErr(w, err)
+		return
+	}
+	if post.UserID != session.UserID {
+		w.WriteHeader(http.StatusUnauthorized)
+		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "unauthorized", Data: nil})
+		return
+	}
+	payload := &patchPostPayload{}
+	err = utils.ParseBody(r, payload)
+	if err != nil {
+		handleInternalErr(w, err)
+		return
+	}
+	if payload.Content == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "invalid content", Data: nil})
+		return
+	}
+	post.Content = payload.Content
+	err = post.UpdateByUUID()
+	if err != nil {
+		handleInternalErr(w, err)
+		return
+	}
+	structs.WriteResponseBody(w, structs.ResponseBody{Msg: "success", Data: post})
 }
 
 var Post = post{
