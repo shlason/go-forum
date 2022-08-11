@@ -8,8 +8,6 @@ import (
 	"github.com/shlason/go-forum/pkg/middlewares"
 )
 
-// TODO: All handlers
-
 type customHandler func(http.ResponseWriter, *http.Request)
 
 func (ch customHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
