@@ -1,4 +1,13 @@
+basePath: /
+host: localhost:8080
 info:
-  contact: {}
+  contact:
+    email: nocvi111@gmail.com
+  description: This is a sample forum server.
+  license:
+    name: MIT
+    url: https://github.com/shlason/go-forum/blob/main/LICENSE
+  title: Go-forum API
+  version: "1.0"
 paths: {}
 swagger: "2.0"
