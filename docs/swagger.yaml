@@ -1,4 +1,28 @@
 basePath: /
+definitions:
+  models.User:
+    properties:
+      createdAt:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      password:
+        type: string
+      updatedAte:
+        type: string
+    type: object
+  structs.ResponseBody:
+    properties:
+      code:
+        type: string
+      data: {}
+      msg:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -9,5 +33,56 @@ info:
     url: https://github.com/shlason/go-forum/blob/main/LICENSE
   title: Go-forum API
   version: "1.0"
-paths: {}
+paths:
+  /signup:
+    post:
+      consumes:
+      - application/json
+      description: Create account by email, name, password
+      parameters:
+      - description: user email
+        in: body
+        name: email
+        required: true
+        schema:
+          type: string
+      - description: user name
+        in: body
+        name: name
+        required: true
+        schema:
+          type: string
+      - description: user password
+        in: body
+        name: password
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/structs.ResponseBody'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.User'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/structs.ResponseBody'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/structs.ResponseBody'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/structs.ResponseBody'
+      summary: Create account
+      tags:
+      - auth
 swagger: "2.0"
