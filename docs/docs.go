@@ -37,30 +37,12 @@ const docTemplate = `{
                 "summary": "Create account",
                 "parameters": [
                     {
-                        "description": "user email",
-                        "name": "email",
+                        "description": "user email, name, password",
+                        "name": "Payload",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "user name",
-                        "name": "name",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "user password",
-                        "name": "password",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/controllers.signupPayload"
                         }
                     }
                 ],
@@ -95,6 +77,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/structs.ResponseBody"
                         }
                     },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/structs.ResponseBody"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -106,6 +94,20 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "controllers.signupPayload": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
         "models.User": {
             "type": "object",
             "properties": {

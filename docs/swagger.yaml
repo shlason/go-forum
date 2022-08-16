@@ -1,5 +1,14 @@
 basePath: /
 definitions:
+  controllers.signupPayload:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    type: object
   models.User:
     properties:
       createdAt:
@@ -40,24 +49,12 @@ paths:
       - application/json
       description: Create account by email, name, password
       parameters:
-      - description: user email
+      - description: user email, name, password
         in: body
-        name: email
+        name: Payload
         required: true
         schema:
-          type: string
-      - description: user name
-        in: body
-        name: name
-        required: true
-        schema:
-          type: string
-      - description: user password
-        in: body
-        name: password
-        required: true
-        schema:
-          type: string
+          $ref: '#/definitions/controllers.signupPayload'
       produces:
       - application/json
       responses:
@@ -76,6 +73,10 @@ paths:
             $ref: '#/definitions/structs.ResponseBody'
         "404":
           description: Not Found
+          schema:
+            $ref: '#/definitions/structs.ResponseBody'
+        "409":
+          description: Conflict
           schema:
             $ref: '#/definitions/structs.ResponseBody'
         "500":
