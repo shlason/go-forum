@@ -42,17 +42,22 @@ type signupPayload struct {
 // TODO: 將 Request Body 的 Struct 和 Model 的 Struct 解耦來更彈性一點，以及控制資料的可見度
 func signup(w http.ResponseWriter, r *http.Request) {
 	user := &models.User{}
-	err := utils.ParseBody(r, user)
+	payload := &signupPayload{}
+	err := utils.ParseBody(r, payload)
 
 	if err != nil {
 		handleInternalErr(w, err)
 		return
 	}
-	if user.Email == "" || user.Name == "" || user.Password == "" {
+	if payload.Email == "" || payload.Name == "" || payload.Password == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "params invalid or not enough", Data: nil})
 		return
 	}
+	// TODO: 在 payload struct 新增方法來做和 model 之間資料的轉換
+	user.Email = payload.Email
+	user.Name = payload.Name
+	user.Password = payload.Password
 	err = user.ReadByEmail()
 	if err == nil {
 		w.WriteHeader(http.StatusConflict)
@@ -101,17 +106,21 @@ type loginPayload struct {
 // @Router       /login [post]
 func login(w http.ResponseWriter, r *http.Request) {
 	user := &models.User{}
-	err := utils.ParseBody(r, user)
+	payload := &loginPayload{}
+	err := utils.ParseBody(r, payload)
 	if err != nil {
 		handleInternalErr(w, err)
 		return
 	}
-	if (user.Email == "" && user.Name == "") || user.Password == "" {
+	if (payload.Email == "" && payload.Name == "") || payload.Password == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "params invalid or not enough", Data: nil})
 		return
 	}
-
+	// TODO: 在 payload struct 新增方法來做和 model 之間資料的轉換
+	user.Email = payload.Email
+	user.Name = payload.Name
+	user.Password = payload.Password
 	var (
 		accountType  string
 		rpwd         string = user.Password
