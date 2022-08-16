@@ -32,7 +32,7 @@ type signupPayload struct {
 // @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param    	 Payload  body   signupPayload true "user email, name, password"
+// @Param    	 Payload  body   signupPayload true "email, name, password"
 // @Success      200      		 {object}  structs.ResponseBody{data=models.User}
 // @Failure      400      		 {object}  structs.ResponseBody
 // @Failure      404      		 {object}  structs.ResponseBody
@@ -81,11 +81,24 @@ func signup(w http.ResponseWriter, r *http.Request) {
 	structs.WriteResponseBody(w, structs.ResponseBody{Msg: fmt.Sprintf("%s", err), Data: user})
 }
 
-var accountTypes = map[string]string{
-	"email": "email",
-	"name":  "name",
+type loginPayload struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
+// login godoc
+// @Summary 	 Login
+// @Description  Login by email or name and password
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param    	 Payload  body   loginPayload true "email or name and password"
+// @Success      200      		 {object}  structs.ResponseBody{data=models.User}
+// @Failure      400      		 {object}  structs.ResponseBody
+// @Failure      404      		 {object}  structs.ResponseBody
+// @Failure      500      		 {object}  structs.ResponseBody
+// @Router       /login [post]
 func login(w http.ResponseWriter, r *http.Request) {
 	user := &models.User{}
 	err := utils.ParseBody(r, user)
@@ -100,8 +113,12 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var (
-		accountType string
-		rpwd        string = user.Password
+		accountType  string
+		rpwd         string = user.Password
+		accountTypes        = map[string]string{
+			"email": "email",
+			"name":  "name",
+		}
 	)
 
 	if user.Email != "" {

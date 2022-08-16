@@ -1,5 +1,14 @@
 basePath: /
 definitions:
+  controllers.loginPayload:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    type: object
   controllers.signupPayload:
     properties:
       email:
@@ -43,13 +52,52 @@ info:
   title: Go-forum API
   version: "1.0"
 paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Login by email or name and password
+      parameters:
+      - description: email or name and password
+        in: body
+        name: Payload
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.loginPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/structs.ResponseBody'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.User'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/structs.ResponseBody'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/structs.ResponseBody'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/structs.ResponseBody'
+      summary: Login
+      tags:
+      - auth
   /signup:
     post:
       consumes:
       - application/json
       description: Create account by email, name, password
       parameters:
-      - description: user email, name, password
+      - description: email, name, password
         in: body
         name: Payload
         required: true
