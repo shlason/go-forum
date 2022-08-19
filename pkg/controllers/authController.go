@@ -197,6 +197,16 @@ func login(w http.ResponseWriter, r *http.Request) {
 	structs.WriteResponseBody(w, structs.ResponseBody{Msg: "success", Data: user})
 }
 
+// logout godoc
+// @Summary 	 Logout
+// @Description  Logout set session expiry now
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Success      200      		 {object}  structs.ResponseBody
+// @Failure      404      		 {object}  structs.ResponseBody
+// @Failure      500      		 {object}  structs.ResponseBody
+// @Router       /logout [post]
 func logout(w http.ResponseWriter, r *http.Request) {
 	c, _ := r.Cookie(constants.Cookie.SessionTokenName)
 	session := models.Session{
