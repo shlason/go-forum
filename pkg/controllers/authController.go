@@ -19,20 +19,45 @@ type auth struct {
 	Logout http.Handler
 }
 
+type signupPayload struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+// TODO: swaggo 文件看熟，把 request payload 和 response 會有什麼都寫清楚
+// signup godoc
+// @Summary 	 Create account
+// @Description  Create account by email, name, password
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param    	 Payload  body   signupPayload true "email, name, password"
+// @Success      200      		 {object}  structs.ResponseBody{data=models.User}
+// @Failure      400      		 {object}  structs.ResponseBody
+// @Failure      404      		 {object}  structs.ResponseBody
+// @Failure      409      		 {object}  structs.ResponseBody
+// @Failure      500      		 {object}  structs.ResponseBody
+// @Router       /signup [post]
 // TODO: 將 Request Body 的 Struct 和 Model 的 Struct 解耦來更彈性一點，以及控制資料的可見度
 func signup(w http.ResponseWriter, r *http.Request) {
 	user := &models.User{}
-	err := utils.ParseBody(r, user)
+	payload := &signupPayload{}
+	err := utils.ParseBody(r, payload)
 
 	if err != nil {
 		handleInternalErr(w, err)
 		return
 	}
-	if user.Email == "" || user.Name == "" || user.Password == "" {
+	if payload.Email == "" || payload.Name == "" || payload.Password == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "params invalid or not enough", Data: nil})
 		return
 	}
+	// TODO: 在 payload struct 新增方法來做和 model 之間資料的轉換
+	user.Email = payload.Email
+	user.Name = payload.Name
+	user.Password = payload.Password
 	err = user.ReadByEmail()
 	if err == nil {
 		w.WriteHeader(http.StatusConflict)
@@ -61,27 +86,48 @@ func signup(w http.ResponseWriter, r *http.Request) {
 	structs.WriteResponseBody(w, structs.ResponseBody{Msg: fmt.Sprintf("%s", err), Data: user})
 }
 
-var accountTypes = map[string]string{
-	"email": "email",
-	"name":  "name",
+type loginPayload struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
+// login godoc
+// @Summary 	 Login
+// @Description  Login by email or name and password
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param    	 Payload  body   loginPayload true "email or name and password"
+// @Success      200      		 {object}  structs.ResponseBody{data=models.User}
+// @Failure      400      		 {object}  structs.ResponseBody
+// @Failure      404      		 {object}  structs.ResponseBody
+// @Failure      500      		 {object}  structs.ResponseBody
+// @Router       /login [post]
 func login(w http.ResponseWriter, r *http.Request) {
 	user := &models.User{}
-	err := utils.ParseBody(r, user)
+	payload := &loginPayload{}
+	err := utils.ParseBody(r, payload)
 	if err != nil {
 		handleInternalErr(w, err)
 		return
 	}
-	if (user.Email == "" && user.Name == "") || user.Password == "" {
+	if (payload.Email == "" && payload.Name == "") || payload.Password == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		structs.WriteResponseBody(w, structs.ResponseBody{Msg: "params invalid or not enough", Data: nil})
 		return
 	}
-
+	// TODO: 在 payload struct 新增方法來做和 model 之間資料的轉換
+	user.Email = payload.Email
+	user.Name = payload.Name
+	user.Password = payload.Password
 	var (
-		accountType string
-		rpwd        string = user.Password
+		accountType  string
+		rpwd         string = user.Password
+		accountTypes        = map[string]string{
+			"email": "email",
+			"name":  "name",
+		}
 	)
 
 	if user.Email != "" {
@@ -151,6 +197,16 @@ func login(w http.ResponseWriter, r *http.Request) {
 	structs.WriteResponseBody(w, structs.ResponseBody{Msg: "success", Data: user})
 }
 
+// logout godoc
+// @Summary 	 Logout
+// @Description  Logout set session expiry now
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Success      200      		 {object}  structs.ResponseBody
+// @Failure      404      		 {object}  structs.ResponseBody
+// @Failure      500      		 {object}  structs.ResponseBody
+// @Router       /logout [post]
 func logout(w http.ResponseWriter, r *http.Request) {
 	c, _ := r.Cookie(constants.Cookie.SessionTokenName)
 	session := models.Session{
